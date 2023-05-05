@@ -49,16 +49,34 @@ function Feature({Svg, title, description}) {
   );
 }
 
+const DescriptionText = `XycLoans is a flash loans protocol implemented for the Soroban Virtual Machine. Thanks to the help of the Stellar Community Fund award we're proceeding restlessy with the development. Check us out on Twitter and Github to monitor the development.`
+
+function MainTextDescription({description} ) {
+    return (
+	<div className="text--center padding-horiz--md">
+	    <p>{description}</p>
+	</div>
+    );
+}
+
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
-      <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
-          ))}
-        </div>
+	<div className="container">
+	    <MainTextDescription {...{description: DescriptionText}}/>
       </div>
     </section>
   );
 }
+
+/*
+  
+        <div className="row">
+          {FeatureList.map((props, idx) => (
+            <Feature key={idx} {...props} />
+          ))}
+          </div>
+	  -->
+      </div>
+
+*/
