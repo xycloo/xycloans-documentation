@@ -49,7 +49,7 @@ function Feature({Svg, title, description}) {
   );
 }
 
-const DescriptionText = `XycLoans is a flash loans protocol implemented for the Soroban Virtual Machine. Thanks to the help of the Stellar Community Fund award we're proceeding restlessy with the development. Check us out on Twitter and Github to monitor the development.`
+const DescriptionText = `XycLoans is a flash loans protocol implemented for the Soroban Virtual Machine. Thanks to the help of the Stellar Community Fund award we're proceeding restlessy with the development. `
 
 function MainTextDescription({description} ) {
     return (
@@ -62,7 +62,7 @@ function MainTextDescription({description} ) {
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
-	<div className="container">
+	<div className="container small-container">
 	    <MainTextDescription {...{description: DescriptionText}}/>
       </div>
     </section>
