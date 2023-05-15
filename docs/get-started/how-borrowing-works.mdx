@@ -4,4 +4,104 @@ sidebar_position: 1
 
 # How To Borrow
 
-Borrowing a flash loan on xycLoans is very simple: all you need is a receiver contract, a strategy, and of course a stellar account. After reading this page, you'll learn how to borrow a flash loan on Soroban with xycLoans. 
+Borrowing a flash loan on xycLoans is very simple: all you need is a receiver contract, a strategy, and of course a stellar account. After reading this page, you'll learn how to borrow a flash loan on Soroban with xycLoans.
+
+## Preparing to Borrow
+Flash loans take place in a single transaction, but before we can execute that transaction we need to create and deploy a receiver contract.
+
+We will go deeper into the functioning and the precautions needed to write a secure receiver contract in the next section. For now, you just need to know that it is the contract that contains the strategy to use the money lent by the flash loan contract. The receiver contract will be invoked by the flash loan contract after the flash loan has transferred the requested amount of tokens to it.
+
+In fact, the borrow process works as follows:
+1. invoke the flash loan borrow (through the proxy or the flash loan).
+2. the flash loan transfers the requested amount to the provided receiver contract.
+3. the flash loan invokes the provided receiver contract.
+4. the receiver contract performs all the operations using its strategy.
+5. the receiver contrat creates an allowance to re-pay the flash loan + a small interest.
+6. the flash loan "claims" the allowance and transfers the interest to the vault.
+
+### Simple Receiver Contract
+As you may have guessed, the main point of the receiver contract is to expose a `execute_operation()` method that at the end of its execution has created an allowance to re-pay the debt.
+
+Since there aren't yet any public protocols on Soroban, to showcase a borrow our receiver contract will simply create the allowance when invoked (this assumes we already have in the receiver's balance the interest of the borrowed amount):
+
+```rust
+#![no_std]
+use receiver_interface::{Contract, ReceiverError};
+use soroban_sdk::{contractimpl, Address, BytesN, Env, Symbol};
+
+mod token {
+    soroban_sdk::contractimport!(file = "../../soroban_token_spec.wasm");
+}
+
+mod receiver_interface {
+    soroban_sdk::contractimport!(
+        file =
+            "../../target/wasm32-unknown-unknown/release/soroban_flash_loan_receiver_standard.wasm"
+    );
+}
+
+pub struct FlashLoanReceiverContract;
+pub struct FlashLoanReceiverContractExt;
+
+fn compute_fee(amount: &i128) -> i128 {
+    amount / 2000 // 0.05%, still TBD
+}
+
+#[contractimpl]
+impl receiver_interface::Contract for FlashLoanReceiverContract {
+    fn exec_op(e: Env) -> Result<(), ReceiverError> {
+        let token_client = token::Client::new(
+            &e,
+            &e.storage()
+                .get::<Symbol, BytesN<32>>(&Symbol::short("T"))
+                .unwrap()
+                .unwrap(),
+        );
+
+        /*
+        Perform all your operations here
+        */
+
+        // Re-paying the loan + 0.05% interest
+        let borrowed = e
+            .storage()
+            .get::<Symbol, i128>(&Symbol::short("A"))
+            .unwrap()
+            .unwrap();
+        let total_amount = borrowed + compute_fee(&borrowed);
+        token_client.incr_allow(
+            &e.current_contract_address(),
+            &e.storage()
+                .get::<Symbol, Address>(&Symbol::short("FL"))
+                .unwrap()
+                .unwrap(),
+            &total_amount,
+        );
+
+        Ok(())
+    }
+}
+
+#[contractimpl]
+impl FlashLoanReceiverContractExt {
+    pub fn init(
+        e: Env,
+        token_id: BytesN<32>,
+        fl_address: Address,
+        amount: i128,
+    ) -> Result<(), ReceiverError> {
+        e.storage().set(&Symbol::short("T"), &token_id);
+        e.storage().set(&Symbol::short("FL"), &fl_address);
+        e.storage().set(&Symbol::short("A"), &amount);
+        Ok(())
+    }
+}
+```
+
+In the above contract, we have implemented `exec_op()` to just create an allowance to the flash loan contract for the borrowed amount (which we read from a contract storage slot) + the interest, calculated with `compute_fee(amount)` (0.05% of the borrowed capital). We also have extended the contract for it to be initialized so that it can be used without hardcoding the parameters. 
+
+:::tip Writing secure receiver contracts
+
+The above isn't a secure receiver contract, just a proof of concept. You'll learn how to write secure and safe receiver contracts in [Writing Receiver Contracts](#). 
+
+:::
