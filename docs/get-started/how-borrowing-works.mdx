@@ -105,3 +105,59 @@ In the above contract, we have implemented `exec_op()` to just create an allowan
 The above isn't a secure receiver contract, just a proof of concept. You'll learn how to write secure and safe receiver contracts in [Writing Receiver Contracts](#). 
 
 :::
+
+You'll need to deploy and initialize your receiver contract. If you user the above contract you can follow these two steps below. If you don't (i.e you write your own receiver contract), we assume that you are already familiar with soroban and know how to initialize the receiver yourself. 
+- Deploy the receiver contract: 
+```bash
+soroban contract deploy --wasm $PATH_TO_RECEIVER_WASM --source-account $SECRET_KEY --rpc-url https://rpc-futurenet.stellar.org:443/soroban/rpc --network-passphrase 'Test SDF Future Network ; October 2022'
+```
+
+- Initialize the receiver contract: 
+```bash
+RECEIVER="YOUR_RECEIVER_ID" # id of your deployed receiver contract
+RECEIVER_ADDR="YOUR_RECEIVER_ADDR" # address of your deployed receiver contract (you can obtain it from the id at https://strkey-encode.xycloo.com/)
+
+TOKEN_ID="d93f5c7bb0ebc4a9c8f727c5cebc4e41194d38257e1d0d910356b43bfc528813" # token to borrow, in our case XLM
+AMOUNT=1000000000 # we are borrowing 100 XLM
+
+soroban contract invoke --id $RECEIVER --source-account $FEES_ADDR_SECRET --rpc-url --rpc-url https://rpc-futurenet.stellar.org:443/soroban/rpc --network-passphrase 'Test SDF Future Network ; October 2022' -- init --token_id $TOKEN_ID --fl_address "$FLASH_LOAN_ADDR" --amount $AMOUNT
+```
+
+# Borrowing
+
+Now that you have set up your receiver contract you're ready to borrow a flash loan from xycLoans. Now, as you can see from the receiver contract code, there's a section (`/* Perform all your operations here */`) that is dedicated to executing profit-generating operations that will allow the receiver contract to repay the flash loan along with the small liquidity-provider fee. However, given that we don't have the possibility to make profit with such operations on Soroban just yet (hang tight, most projects are still under development, just like xycLoans!), we will need the receiver contract to already hold some balance before re-paying the loan. This already-existing receiver contract balance should not be less than the fee paid to the flash loan, so not less than 0.05% of the borrowed amount. 
+
+Assuming we are borrowing XLM (that's what we're using in our receiver contract, take a look at the initialize invocation you just made), we will need to send some XLM to the receiver contract. We decide to send 10XLM, which in an actual production receiver contract is the profit obtained from the various trading/lending operations:
+
+```bash
+RECEIVER_ADDR="YOUR_RECEIVER_ADDR" # address of your deployed receiver contract (you can obtain it from the id at https://strkey-encode.xycloo.com/)
+
+soroban contract invoke --id d93f5c7bb0ebc4a9c8f727c5cebc4e41194d38257e1d0d910356b43bfc528813 --source-account $SECRET_KEY --rpc-url https://future.stellar.kai.run:443/soroban/rpc --network-passphrase 'Test SDF Future Network ; October 2022' -- xfer --from "$PUBLIC_KEY" --to "$RECEIVER_ADDR" --amount 100000000 # 10 XLM
+```
+
+Finally, we can borrow our flash loan by invoking the flash loan contract's `borrow` method:
+
+```bash
+RECEIVER_ADDR="YOUR_RECEIVER_ADDR" # address of your deployed receiver contract (you can obtain it from the id at https://strkey-encode.xycloo.com/)
+AMOUNT=1000000000 # we are borrowing 100 XLM
+
+soroban contract invoke --id $FLASH_LOAN --source-account $FEES_ADDR_SECRET --rpc-url https://future.stellar.kai.run:443/soroban/rpc --network-passphrase 'Test SDF Future Network ; October 2022' -- borrow --receiver_id "$RECEIVER_ADDR" --amount $AMOUNT
+```
+
+That's it! You took your first successful flash loan on Soroban, if you now check your receiver contract's XLM balance, you should see it holding 9.5XLM (10XLM of profit - 0.5XLM that goes to the flash loan as fee):
+
+```bash
+RECEIVER_ADDR="YOUR_RECEIVER_ADDR" # address of your deployed receiver contract (you can obtain it from the id at https://strkey-encode.xycloo.com/)
+
+soroban contract invoke --id d93f5c7bb0ebc4a9c8f727c5cebc4e41194d38257e1d0d910356b43bfc528813 --source-account $SECRET_KEY --rpc-url https://future.stellar.kai.run:443/soroban/rpc --network-passphrase 'Test SDF Future Network ; October 2022' -- balance --id "$RECEIVER_ADDR"
+
+# should return 95000000 stroops as balance for $RECEIVER_ADDR
+```
+
+:::tip Profiting with flash loans
+
+Remember that you won't need to send the 10XLM to the receiver address when borrowing a "real" flash loan, but you'll interact with other contracts in order to generaate profit. Use cases are arbitrage trading, liquidations, collateral swapping, and others.
+
+:::
+
+Now that you have explored how borrowing works, you may be curious about what are some best practices for implementing a secure receiver contract. See you in the next section!
