@@ -1,0 +1,25 @@
+# Deposit Into a Pool
+
+Depositing into a xycLoans pool can be done from the xycLoans app. Before you deposit into a pool, you need to figure out which pool to deposit into. Below are some guidelines.
+
+## Finding the right pool(s)
+
+As a lender, when you deposit into a pool you will be minted an amount of liquidity provider shares that allow you to collect yield and withdraw your deposit. The minted shares are proportional to the deposited amount:
+
+$$ 
+minted = \frac{deposited \cdot totalsupply}{totaldeposited} 
+$$
+
+And the amount of yield you collect depends from your liquidity pool shares balance. This means that in order to find the correct pool to put liquidity into you'll have to respect the basic supply-demand principle. From there you can obtain the performance of the various pools and decide where to allocate your funds.
+
+:::tip Withdrawing at any time
+
+Remember that you can withdraw your funds from a pool at any time without any limitations or hidden fees (you just pay the transaction fee).
+
+:::
+
+### Eploring the existing pools from the web app
+XycLoans' smart contracts can be independent flash loan-vault contracts by design, but the pools within the protocol will be linked to the proxy contract. You can explore the pools that are within the xycLoans' protocol from the web app's [explore](#) page.
+
+## Depositing through the App
+

@@ -3,6 +3,9 @@
 
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const math = require('remark-math');
+const katex = require('rehype-katex');
+
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -24,6 +27,7 @@ const config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
 
+
     // Even if you don't use internalization, you can use this field to set useful
     // metadata like html lang. For example, if your site is Chinese, you may want
     // to replace "en" with "zh-Hans".
@@ -43,6 +47,9 @@ const config = {
 		    // Remove this to remove the "edit this page" links.
 		    editUrl:
 		    'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+		    remarkPlugins: [math],
+		    rehypePlugins: [katex],
+
 		},
 		blog: {
 		    showReadingTime: true,
@@ -58,6 +65,16 @@ const config = {
 	],
     ],
 
+    stylesheets: [
+	{
+	    href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
+	    type: 'text/css',
+	    integrity:
+	    'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
+	    crossorigin: 'anonymous',
+	},
+    ],
+    
     themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
