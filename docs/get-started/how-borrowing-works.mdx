@@ -22,7 +22,7 @@ In fact, the borrow process works as follows:
 ### Simple Receiver Contract
 As you may have guessed, the main point of the receiver contract is to expose a `execute_operation()` method that at the end of its execution has created an allowance to re-pay the debt.
 
-Since there aren't yet any public protocols on Soroban, to showcase a borrow our receiver contract will simply create the allowance when invoked (this assumes we already have in the receiver's balance the interest of the borrowed amount):
+Since there aren't yet any public protocols on Soroban, to showcase a borrow our receiver contract ply create the allowance when invoked (this assumes we already have in the receiver's balance the interest of the borrowed amount):
 
 ```rust
 #![no_std]

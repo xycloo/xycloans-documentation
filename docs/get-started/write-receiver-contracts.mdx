@@ -1,1 +1,131 @@
 # Best Practices for Writing Secure Receiver Contracts
+
+Writing a secure receiver contract is extremely important beacuse it holds all the profits you make, and given that anyone can explore and call your receiver contract you need to make sure you take all the measures to keep those profits safe and usable.
+
+If you take a quick look at the receiver contract in the previous page you can notice that it is insecure:
+- the init function can be called by anyone, so the parameters in the contract are not secure.
+- there is no way of getting the earned profit out of the contracts
+
+## Features of a Receiver Contract
+A xycLoans receiver contract has 3 characteristics that need to be implemented for it to be secure and usable:
+1. Secure initialization, in fact the initialize function should either be called just once, or at least it should just be callable by the admin.
+2. The `execute_operations()` method should not have further checks, the "worst" that can happen is that another address calls the flash loan with your receiver contract, and if it is successful you'll get the profit anyways and the caller will pay the fees. 
+3. It should expose a function that enables the admin to withdraw the funds from the contract to its account. This function should require the admin's auth and send funds to the admin or another user if specified.
+
+## Implementation
+
+Below there is an implementation of a secure receiver contract, from which you can start building yours.
+
+```rust
+#![no_std]
+use receiver_interface::{Contract, ReceiverError};
+use soroban_sdk::{contractimpl, token, Address, BytesN, Env, Symbol};
+
+mod receiver_interface {
+    soroban_sdk::contractimport!(
+        file =
+            "../../target/wasm32-unknown-unknown/release/soroban_flash_loan_receiver_standard.wasm"
+    );
+}
+
+pub struct FlashLoanReceiverContract;
+pub struct FlashLoanReceiverContractExt;
+
+fn compute_fee(amount: &i128) -> i128 {
+    amount / 2000 // 0.05%, still TBD
+}
+
+#[contractimpl]
+impl receiver_interface::Contract for FlashLoanReceiverContract {
+    fn exec_op(e: Env) -> Result<(), ReceiverError> {
+        let token_client = token::Client::new(
+            &e,
+            &e.storage()
+                .get::<Symbol, Address>(&Symbol::short("T"))
+                .unwrap()
+                .unwrap(),
+        );
+
+        /*
+        Perform all your operations here
+        */
+
+        // Re-paying the loan + 0.05% interest
+        let borrowed = e
+            .storage()
+            .get::<Symbol, i128>(&Symbol::short("A"))
+            .unwrap()
+            .unwrap();
+        let total_amount = borrowed + compute_fee(&borrowed);
+        token_client.incr_allow(
+            &e.current_contract_address(),
+            &e.storage()
+                .get::<Symbol, Address>(&Symbol::short("FL"))
+                .unwrap()
+                .unwrap(),
+            &total_amount,
+        );
+
+        Ok(())
+    }
+}
+
+#[contractimpl]
+impl FlashLoanReceiverContractExt {
+    pub fn init(
+        e: Env,
+		admin: Address,
+        token_id: Address,
+        fl_address: Address,
+        amount: i128,
+    ) -> Result<(), ReceiverError> {
+		
+		// if the admin exists, i.e the contract has already been initialized, authorize and authenticate the provided [admin] argument
+		// if the admin doesn't exist, then initialize the contract
+		if let Ok(Some(stored_admin)) = e
+            .storage()
+            .get::<Symbol, Address>(&Symbol::short("ADMIN")) {
+				if stored_admin == admin {
+					admin.require_auth();
+					e.storage().set(&Symbol::short("ADMIN"), &admin);
+					e.storage().set(&Symbol::short("T"), &token_id);
+					e.storage().set(&Symbol::short("FL"), &fl_address);
+					e.storage().set(&Symbol::short("A"), &amount);
+				}
+			} else {
+				e.storage().set(&Symbol::short("ADMIN"), &admin);
+				e.storage().set(&Symbol::short("T"), &token_id);
+				e.storage().set(&Symbol::short("FL"), &fl_address);
+				e.storage().set(&Symbol::short("A"), &amount);
+			}
+        Ok(())
+    }
+	
+	pub fn withdraw(e: Env, admin: Address, amount: i128, to: Option<Address>) -> Result<(), ReceiverError> {
+		if let Ok(Some(stored_admin)) = e
+            .storage()
+            .get::<Symbol, Address>(&Symbol::short("ADMIN")) {
+				if stored_admin == admin {
+					admin.require_auth();
+					let token_client = token::Client::new(
+						&e,
+						&e.storage()
+						.get::<Symbol, Address>(&Symbol::short("T"))
+						.unwrap()
+						.unwrap(),
+					);
+					
+					if let Some(recipient) = to {
+						token_client.transfer(&e, &e.current_contract_address(), &recipient, &amount);
+					} else {
+						token_client.transfer(&e, &e.current_contract_address(), &stored_admin, &amount);
+					}
+				}
+			} else {
+				panic!();
+			}
+	}
+}
+```
+
+The above contract implements all the three receiver contract principles and similar contracts should be used in a production environment.
