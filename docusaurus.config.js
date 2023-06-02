@@ -11,17 +11,17 @@ const katex = require('rehype-katex');
 const config = {
     title: 'xycLoans: Flash Loans and Liquidity protocol on the Soroban VM',
     tagline: 'Bringing flash loans to the Soroban ecosystem',
-    favicon: 'img/favicon.ico',
+    favicon: 'https://avatars.githubusercontent.com/u/95138535?s=200&v=4',
 
     // Set the production url of your site here
-    url: 'https://your-docusaurus-test-site.com',
+    url: 'https://xycloans.xycloo.com',
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl: '/',
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
-    organizationName: 'xycloo', // Usually your GitHub org/user name.
+    organizationName: 'xyclooLabs', // Usually your GitHub org/user name.
     projectName: 'xycLoans', // Usually your repo name.
 
     onBrokenLinks: 'throw',
