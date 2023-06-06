@@ -1,18 +1,20 @@
 # Deposit Into a Pool
 
+:::warning
+
+Soroban is only available on Futurenet, so is xycLoans. All the funds that interact with the protocol are not real assets and you shouldn't use mainnet keypairs.
+
+:::
+
 Depositing into a xycLoans pool can be done from the xycLoans app. Before you deposit into a pool, you need to figure out which pool to deposit into. Below are some guidelines.
 
 ## Finding the right pool(s)
 
-As a lender, when you deposit into a pool you will be minted an amount of liquidity provider shares that allow you to collect yield and withdraw your deposit. The minted shares are proportional to the deposited amount:
-
-$$ 
-minted = \frac{deposited \cdot totalsupply}{totaldeposited} 
-$$
+As a lender, when you deposit into a pool you will be minted an amount of liquidity provider shares that allow you to collect yield and withdraw your deposit.
 
 And the amount of yield you collect depends from your liquidity pool shares balance. This means that in order to find the correct pool to put liquidity into you'll have to respect the basic supply-demand principle. From there you can obtain the performance of the various pools and decide where to allocate your funds.
 
-:::tip Withdrawing at any time
+:::tip 
 
 Remember that you can withdraw your funds from a pool at any time without any limitations or hidden fees (you just pay the transaction fee).
 
@@ -21,7 +23,15 @@ Remember that you can withdraw your funds from a pool at any time without any li
 
 ### Exploring Pools, Depositing and Managing Liquidity
 
-To explore the protocol's pools and deposit and manage your liquidity, you can go ahead and try [the webapp](#). 
+To explore the protocol's pools and deposit and manage your liquidity, you can go ahead and try [the webapp](). 
+
+# Using the webapp
+
+The webapp is ready to use, but given Soroban's development stage we have focused less on the integrations. In fact, you can currently only use xBullWallet, but don't worry as you don't need to install any browser extension, xBullWallet allows you to securely sign transactions with their webapp.
+
+To start exploring the pools (currently only XLM pool), open the app, connect the wallet (make sure your account is funded on futurenet) and then try depositing and withdrawing, leaving funds to earn yield (we will manually perform some flash loans in the next week(s), but if you are a developer we encourage you to try making your own flash loan).
+
+
 
 <!--
 ### Eploring the existing pools from the web app
