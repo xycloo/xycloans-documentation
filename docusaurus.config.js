@@ -115,6 +115,11 @@ const config = {
 		    label: 'Interface',
 		    position: 'right',
 		},
+		{
+		    href: 'https://app.xycloans.xycloo.com/',
+		    label: 'Launch the App',
+		    position: 'right',
+		},
             ],
 	},
 	footer: {
